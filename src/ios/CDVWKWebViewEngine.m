@@ -134,7 +134,11 @@
         // add to keyWindow to ensure it is 'active'
         [UIApplication.sharedApplication.keyWindow addSubview:self.engineWebView];
 
-        self.frame = frame;
+        float height = frame.size.height;
+        if(IsAtLeastiOSVersion(@"11.0")) {
+            height -= self.engineWebView.safeAreaInsets.bottom;
+        }
+        self.frame = CGRectMake(frame.origin.x, frame.origin.y, frame.size.width, height);
     }
     return self;
 }
