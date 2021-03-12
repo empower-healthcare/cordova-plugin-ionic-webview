@@ -105,12 +105,6 @@
 @property (nonatomic, readwrite) NSString *CDV_LOCAL_SERVER;
 @end
 
-// expose private configuration value required for background operation
-@interface WKWebViewConfiguration ()
-
-@property (setter=_setAlwaysRunsAtForegroundPriority:, nonatomic) bool _alwaysRunsAtForegroundPriority;
-
-@end
 
 
 // see forwardingTargetForSelector: selector comment for the reason for this pragma
@@ -131,6 +125,9 @@
             return nil;
         }
 
+        //Set default Server String
+        self.CDV_LOCAL_SERVER = @"http://localhost:8080";
+
         // add to keyWindow to ensure it is 'active'
         [UIApplication.sharedApplication.keyWindow addSubview:self.engineWebView];
 
@@ -146,27 +143,20 @@
 }
 - (void)initWebServer:(NSDictionary*)settings
 {
-    [GCDWebServer setLogLevel: kGCDWebServerLoggingLevel_Warning];
-    self.webServer = [[GCDWebServer alloc] init];
-    [self.webServer addGETHandlerForBasePath:@"/" directoryPath:@"/" indexFilename:nil cacheAge:3600 allowRangeRequests:YES];
-  
-    NSString *bind = [settings cordovaSettingForKey:@"WKBind"];
-    if (bind == nil) {
-      bind = @"localhost";
-    }
-  
+        [GCDWebServer setLogLevel: kGCDWebServerLoggingLevel_Warning];
+        self.webServer = [[GCDWebServer alloc] init];
+        [self.webServer addGETHandlerForBasePath:@"/" directoryPath:@"/" indexFilename:nil cacheAge:3600 allowRangeRequests:YES];
     int portNumber = [settings cordovaFloatSettingForKey:@"WKPort" defaultValue:8080];
-  
-    //Set default Server String
-    self.CDV_LOCAL_SERVER = [NSString stringWithFormat:@"http://%@:%d", bind, portNumber];
-
-    NSDictionary *options = @{
-                              GCDWebServerOption_Port: @(portNumber),
-                              GCDWebServerOption_BindToLocalhost: @(YES),
-                              GCDWebServerOption_ServerName: @"Ionic"
-                            };
+    if(portNumber != 8080){
+        self.CDV_LOCAL_SERVER = [NSString stringWithFormat:@"http://localhost:%d", portNumber];
+    }
+        NSDictionary *options = @{
+                                  GCDWebServerOption_Port: @(portNumber),
+                                  GCDWebServerOption_BindToLocalhost: @(YES),
+                                  GCDWebServerOption_ServerName: @"Ionic"
+                                  };
     
-    [self.webServer startWithOptions:options error:nil];
+        [self.webServer startWithOptions:options error:nil];
 }
 
 - (WKWebViewConfiguration*) createConfigurationFromSettings:(NSDictionary*)settings
@@ -186,8 +176,6 @@
     if (settings == nil) {
         return configuration;
     }
-    //required to stop wkwebview suspending in background too eagerly (as used in background mode plugin)
-    configuration._alwaysRunsAtForegroundPriority = [settings cordovaBoolSettingForKey:@"WKEnableBackground" defaultValue:NO];
     configuration.allowsInlineMediaPlayback = [settings cordovaBoolSettingForKey:@"AllowInlineMediaPlayback" defaultValue:YES];
     configuration.suppressesIncrementalRendering = [settings cordovaBoolSettingForKey:@"SuppressesIncrementalRendering" defaultValue:NO];
     configuration.allowsAirPlayForMediaPlayback = [settings cordovaBoolSettingForKey:@"MediaPlaybackAllowsAirPlay" defaultValue:YES];
