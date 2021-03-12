@@ -135,8 +135,10 @@
         [UIApplication.sharedApplication.keyWindow addSubview:self.engineWebView];
 
         float height = frame.size.height;
-        if(IsAtLeastiOSVersion(@"11.0")) {
-            height -= self.engineWebView.safeAreaInsets.bottom;
+        NSString *modelName = [[UIDevice currentDevice] model];
+        int screenHeight = (int)([UIScreen mainScreen].nativeBounds.size.height);
+        if ([modelName isEqualToString:@"iPhone"] && screenHeight >= 2436) {
+            height -= 34;
         }
         self.frame = CGRectMake(frame.origin.x, frame.origin.y, frame.size.width, height);
     }
