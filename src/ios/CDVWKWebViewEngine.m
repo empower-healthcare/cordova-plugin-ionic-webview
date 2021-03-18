@@ -22,6 +22,7 @@
 #import <AVFoundation/AVFoundation.h>
 #import <objc/message.h>
 #import <objc/runtime.h>
+#import <sys/utsname.h>
 
 #import "CDVWKWebViewEngine.h"
 #import "CDVWKWebViewUIDelegate.h"
@@ -132,9 +133,12 @@
         [UIApplication.sharedApplication.keyWindow addSubview:self.engineWebView];
 
         float height = frame.size.height;
-        NSString *modelName = [[UIDevice currentDevice] model];
-        int screenHeight = (int)([UIScreen mainScreen].nativeBounds.size.height);
-        if ([modelName isEqualToString:@"iPhone"] && screenHeight >= 2436) {
+        struct utsname systemInfo;
+        uname(&systemInfo);
+        NSString* deviceName = [NSString stringWithCString:systemInfo.machine encoding:NSUTF8StringEncoding];
+        if ([deviceName isEqualToString:@"iPhone10,3"] || [deviceName isEqualToString:@"iPhone10,6"]) {
+            height -= 34;
+        } else if ([deviceName hasPrefix:@"iPhone"] && [[deviceName substringFromIndex:6] integerValue] > 10) {
             height -= 34;
         }
         self.frame = CGRectMake(frame.origin.x, frame.origin.y, frame.size.width, height);
